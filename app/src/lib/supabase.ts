@@ -66,7 +66,8 @@ async function supabaseGet<T>(path: string) {
     return { data: null as T | null, error: "Supabase env vars are not configured yet." };
   }
 
-  const response = await fetch(`${supabaseUrl}${path}`, {
+  const url = `${supabaseUrl}/rest/v1${path}`;
+  const response = await fetch(url, {
     headers: {
       apikey: supabaseAnonKey as string,
       Authorization: `Bearer ${supabaseAnonKey as string}`,
@@ -86,7 +87,7 @@ async function supabaseGet<T>(path: string) {
 
 export async function fetchMaterialsFromSupabase() {
   const result = await supabaseGet<SupabaseMaterialRow[]>(
-    `/rest/v1/materials?select=${MATERIAL_FIELDS}&order=name.asc`,
+    `/materials?select=${MATERIAL_FIELDS}&order=name.asc`,
   );
 
   return {
@@ -97,7 +98,7 @@ export async function fetchMaterialsFromSupabase() {
 
 export async function fetchMaterialByIdFromSupabase(materialId: string) {
   const result = await supabaseGet<SupabaseMaterialRow[]>(
-    `/rest/v1/materials?select=${MATERIAL_FIELDS}&id=eq.${encodeURIComponent(materialId)}&limit=1`,
+    `/materials?select=${MATERIAL_FIELDS}&id=eq.${encodeURIComponent(materialId)}&limit=1`,
   );
 
   const material = result.data?.[0] ? normalizeMaterial(result.data[0]) : null;
@@ -110,7 +111,7 @@ export async function fetchMaterialByIdFromSupabase(materialId: string) {
 
 export async function fetchInventoryLogsFromSupabase() {
   const result = await supabaseGet<SupabaseInventoryLogRow[]>(
-    `/rest/v1/inventory_logs?select=${INVENTORY_LOG_FIELDS}&order=created_at.desc`,
+    `/inventory_logs?select=${INVENTORY_LOG_FIELDS}&order=created_at.desc`,
   );
 
   return {
