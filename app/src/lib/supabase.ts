@@ -303,6 +303,7 @@ type SupabaseCategoryRow = {
   id: string;
   name: string;
   description?: string | null;
+  unit_name?: string | null;
   created_at?: string;
 };
 
@@ -317,14 +318,41 @@ export async function fetchCategoriesFromSupabase() {
   };
 }
 
-export async function createCategoryInSupabase(name: string, description?: string) {
+export async function fetchCategoriesWithUnitsFromSupabase() {
+  const result = await supabaseGet<SupabaseCategoryRow[]>(
+    `/categories?order=name.asc`,
+  );
+
+  return {
+    data: (result.data ?? []).map((cat) => ({
+      name: cat.name,
+      description: cat.description,
+      unit_name: cat.unit_name,
+    })),
+    error: result.error,
+  };
+}
+
+export async function createCategoryInSupabase(name: string, unitName?: string, description?: string) {
   const payload: Record<string, string | null> = {
     id: crypto.randomUUID(),
     name: name.trim(),
+    unit_name: unitName?.trim() ?? null,
     description: description?.trim() ?? null,
   };
 
   return supabasePost("/categories", payload);
+}
+
+export async function updateCategoryUnitInSupabase(categoryName: string, unitName: string | null) {
+  const updates: Record<string, string | null> = {
+    unit_name: unitName?.trim() ?? null,
+  };
+
+  return supabasePatch(
+    `/categories?name=eq.${encodeURIComponent(categoryName)}`,
+    updates,
+  );
 }
 
 export async function deleteCategoryInSupabase(categoryName: string) {

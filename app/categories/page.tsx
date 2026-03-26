@@ -5,20 +5,27 @@ import { TopNavLinks } from "../src/components/top-nav-links";
 import {
   createCategoryInSupabase,
   deleteCategoryInSupabase,
-  fetchCategoriesFromSupabase,
+  fetchCategoriesWithUnitsFromSupabase,
+  updateCategoryUnitInSupabase,
+  fetchUnitsFromSupabase,
 } from "../src/lib/supabase";
 
 async function addCategoryAction(formData: FormData) {
   "use server";
 
   const name = String(formData.get("name") ?? "").trim();
+  const unitName = String(formData.get("unit") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 
   if (!name) {
     redirect("/categories?status=validation&field=name");
   }
 
-  const { error } = await createCategoryInSupabase(name, description || undefined);
+  if (!unitName) {
+    redirect("/categories?status=validation&field=unit");
+  }
+
+  const { error } = await createCategoryInSupabase(name, unitName, description || undefined);
 
   if (error) {
     redirect(`/categories?status=error&message=${encodeURIComponent(error)}`);
@@ -27,6 +34,27 @@ async function addCategoryAction(formData: FormData) {
   revalidatePath("/categories");
   revalidatePath("/materials");
   redirect("/categories?status=success");
+}
+
+async function updateCategoryAction(formData: FormData) {
+  "use server";
+
+  const categoryName = String(formData.get("category_name") ?? "").trim();
+  const newUnit = String(formData.get("new_unit") ?? "").trim();
+
+  if (!categoryName) {
+    redirect("/categories?status=error&message=Missing category name");
+  }
+
+  const { error } = await updateCategoryUnitInSupabase(categoryName, newUnit || null);
+
+  if (error) {
+    redirect(`/categories?status=error&message=${encodeURIComponent(error)}`);
+  }
+
+  revalidatePath("/categories");
+  revalidatePath("/materials");
+  redirect("/categories?status=updated");
 }
 
 async function deleteCategoryAction(formData: FormData) {
@@ -58,7 +86,8 @@ type CategoriesPageProps = {
 
 export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
   const params = searchParams ?? {};
-  const { data: categories, error } = await fetchCategoriesFromSupabase();
+  const { data: categories, error } = await fetchCategoriesWithUnitsFromSupabase();
+  const { data: units } = await fetchUnitsFromSupabase();
   const hasCategories = categories.length > 0;
 
   return (
@@ -73,7 +102,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
               Material categories
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              Manage material categories for the Tuckertown catalog.
+              Create categories and assign their default measurement unit.
             </p>
           </div>
 
@@ -91,12 +120,18 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
         <div className="mt-10 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">
           <h2 className="text-xl font-semibold">Add Category</h2>
           <p className="mt-2 text-sm text-slate-300">
-            Create a new material category.
+            Create a new material category and assign its unit.
           </p>
 
           {params.status === "success" ? (
             <p className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
               Category added successfully.
+            </p>
+          ) : null}
+
+          {params.status === "updated" ? (
+            <p className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+              Category updated successfully.
             </p>
           ) : null}
 
@@ -112,13 +147,19 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
             </p>
           ) : null}
 
-          {params.status === "error" ? (
-            <p className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-              Unable to add category right now. {params.message ?? "Please try again."}
+          {params.status === "validation" && params.field === "unit" ? (
+            <p className="mt-4 rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+              Unit assignment is required.
             </p>
           ) : null}
 
-          <form action={addCategoryAction} className="mt-5 grid gap-4 md:grid-cols-2">
+          {params.status === "error" ? (
+            <p className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              Unable to process request. {params.message ?? "Please try again."}
+            </p>
+          ) : null}
+
+          <form action={addCategoryAction} className="mt-5 grid gap-4 md:grid-cols-3">
             <label className="grid gap-2 text-sm">
               <span className="text-slate-300">Category Name *</span>
               <input
@@ -131,6 +172,22 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
             </label>
 
             <label className="grid gap-2 text-sm">
+              <span className="text-slate-300">Default Unit *</span>
+              <select
+                name="unit"
+                required
+                className="rounded-xl border border-cyan-400/30 bg-[#050914] px-3 py-2 text-white focus:border-cyan-300 focus:outline-none"
+              >
+                <option value="">Select a unit</option>
+                {units.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm">
               <span className="text-slate-300">Description (optional)</span>
               <input
                 name="description"
@@ -140,7 +197,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
               />
             </label>
 
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <button
                 type="submit"
                 className="rounded-xl border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/20"
@@ -171,18 +228,50 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
               <div className="mt-4 space-y-3">
                 {categories.map((category) => (
                   <div
-                    key={category}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-cyan-500/20 bg-[#050914] px-4 py-3 transition hover:border-cyan-400/60 hover:bg-[#111a2f]"
+                    key={category.name}
+                    className="flex flex-col gap-3 rounded-xl border border-cyan-500/20 bg-[#050914] p-4 transition hover:border-cyan-400/60 hover:bg-[#111a2f]"
                   >
-                    <p className="font-medium text-white">{category}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-white">{category.name}</p>
+                        {category.description && (
+                          <p className="text-xs text-slate-400">{category.description}</p>
+                        )}
+                      </div>
 
-                    <form action={deleteCategoryAction} className="flex-shrink-0">
-                      <input type="hidden" name="category_name" value={category} />
+                      <form action={deleteCategoryAction} className="flex-shrink-0">
+                        <input type="hidden" name="category_name" value={category.name} />
+                        <button
+                          type="submit"
+                          className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                        >
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+
+                    <form action={updateCategoryAction} className="flex gap-2 items-center">
+                      <input type="hidden" name="category_name" value={category.name} />
+                      <div className="flex-1">
+                        <label className="text-xs text-slate-400">Assigned Unit</label>
+                        <select
+                          name="new_unit"
+                          defaultValue={category.unit_name || ""}
+                          className="mt-1 w-full rounded-lg border border-cyan-400/30 bg-[#050914] px-3 py-2 text-sm text-white focus:border-cyan-300 focus:outline-none"
+                        >
+                          <option value="">None assigned</option>
+                          {units.map((u) => (
+                            <option key={u} value={u}>
+                              {u}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       <button
                         type="submit"
-                        className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                        className="mt-5 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20"
                       >
-                        Delete
+                        Update
                       </button>
                     </form>
                   </div>

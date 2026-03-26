@@ -7,6 +7,7 @@ import {
   createMaterialInSupabase,
   deleteMaterialInSupabase,
   fetchMaterialsFromSupabase,
+  fetchCategoriesWithUnitsFromSupabase,
   type CreateMaterialInput,
 } from "../src/lib/supabase";
 
@@ -25,12 +26,22 @@ async function addMaterialAction(formData: FormData) {
 
   const name = String(formData.get("name") ?? "").trim();
   const sku = String(formData.get("sku") ?? "").trim();
-  const category = String(formData.get("category") ?? "").trim();
-  const unit = String(formData.get("unit") ?? "").trim();
+  let category = String(formData.get("category") ?? "").trim();
+  let unit = String(formData.get("unit") ?? "").trim();
   const color = String(formData.get("color") ?? "").trim();
   const scanCode = String(formData.get("scan_code") ?? "").trim();
   const qrCode = String(formData.get("qr_code") ?? "").trim();
   const active = parseBooleanFromForm(formData.get("active"));
+
+  // Enforce category→unit mapping: if category has assigned unit, override submitted unit
+  // Do this BEFORE validation so unit is guaranteed to be set
+  const { data: categoriesWithUnits, error: fetchError } = await fetchCategoriesWithUnitsFromSupabase();
+  if (!fetchError && categoriesWithUnits) {
+    const selectedCategory = categoriesWithUnits.find((c) => c.name === category);
+    if (selectedCategory && selectedCategory.unit_name) {
+      unit = selectedCategory.unit_name;
+    }
+  }
 
   const candidate: CreateMaterialInput = {
     name,
