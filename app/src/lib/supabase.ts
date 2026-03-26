@@ -145,6 +145,31 @@ async function supabaseDelete(path: string) {
   return { error: null };
 }
 
+async function supabasePatch<TBody extends object>(path: string, body: TBody) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase env vars are not configured yet." };
+  }
+
+  const url = `${supabaseUrl}/rest/v1${path}`;
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseAnonKey as string,
+      Authorization: `Bearer ${supabaseAnonKey as string}`,
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return { error: `Supabase update failed with status ${response.status}.` };
+  }
+
+  return { error: null };
+}
+
 export async function fetchMaterialsFromSupabase() {
   const result = await supabaseGet<SupabaseMaterialRow[]>(
     `/materials?order=name.asc`,
@@ -208,4 +233,37 @@ export async function deleteMaterialInSupabase(materialId: string) {
 
 export async function deleteInventoryLogInSupabase(logId: string) {
   return supabaseDelete(`/inventory_logs?id=eq.${encodeURIComponent(logId)}`);
+}
+
+export async function updateMaterialInSupabase(
+  materialId: string,
+  updates: Partial<CreateMaterialInput>
+) {
+  const payload: Record<string, string | boolean | null> = {};
+
+  if (updates.name !== undefined) payload.name = updates.name;
+  if (updates.sku !== undefined) payload.sku = updates.sku;
+  if (updates.category !== undefined) payload.category = updates.category;
+  if (updates.unit !== undefined) payload.unit = updates.unit;
+  if (updates.active !== undefined) payload.active = updates.active;
+  if (updates.color !== undefined) payload.color = updates.color ?? null;
+  if (updates.scanCode !== undefined) payload.scan_code = updates.scanCode ?? null;
+  if (updates.qrCode !== undefined) payload.qr_code = updates.qrCode ?? null;
+
+  return supabasePatch(`/materials?id=eq.${encodeURIComponent(materialId)}`, payload);
+}
+
+export async function updateInventoryLogInSupabase(
+  logId: string,
+  updates: Partial<SupabaseInventoryLogRow>
+) {
+  const payload: Record<string, unknown> = {};
+
+  if (updates.action !== undefined) payload.action = updates.action;
+  if (updates.quantity !== undefined) payload.quantity = updates.quantity;
+  if (updates.job_name !== undefined) payload.job_name = updates.job_name ?? null;
+  if (updates.jobName !== undefined) payload.jobName = updates.jobName ?? null;
+  if (updates.note !== undefined) payload.note = updates.note ?? null;
+
+  return supabasePatch(`/inventory_logs?id=eq.${encodeURIComponent(logId)}`, payload);
 }
