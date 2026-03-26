@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { inventoryLogs, materials } from "../src/lib/mock-data";
-import type { InventoryAction } from "../src/types/inventory";
+import type { InventoryAction, InventoryLog } from "../src/types/inventory";
 
 const actionOptions: { value: InventoryAction; label: string }[] = [
   { value: "in", label: "In" },
@@ -19,7 +19,9 @@ export default function ScanPage() {
   const [quantity, setQuantity] = useState("1");
   const [jobName, setJobName] = useState("");
   const [note, setNote] = useState("");
+  const [logs, setLogs] = useState<InventoryLog[]>(inventoryLogs);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState("");
 
   const selectedMaterial = useMemo(
     () => materials.find((material) => material.id === materialId),
@@ -27,9 +29,12 @@ export default function ScanPage() {
   );
 
   const quantityValue = Number(quantity);
+  const materialInvalid = !materialId;
+  const actionInvalid = !action;
   const quantityInvalid = !quantity || Number.isNaN(quantityValue) || quantityValue <= 0;
+  const formInvalid = materialInvalid || actionInvalid || quantityInvalid;
 
-  const recentEntries = [...inventoryLogs]
+  const recentEntries = [...logs]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6)
     .map((log) => ({
@@ -72,6 +77,28 @@ export default function ScanPage() {
             onSubmit={(event) => {
               event.preventDefault();
               setSubmitAttempted(true);
+              setConfirmationMessage("");
+
+              if (formInvalid) {
+                return;
+              }
+
+              const newEntry: InventoryLog = {
+                id: `log-temp-${Date.now()}`,
+                materialId,
+                action,
+                quantity: quantityValue,
+                ...(jobName.trim() ? { jobName: jobName.trim() } : {}),
+                ...(note.trim() ? { note: note.trim() } : {}),
+                createdAt: new Date().toISOString(),
+              };
+
+              setLogs((currentLogs) => [newEntry, ...currentLogs]);
+              setQuantity("1");
+              setJobName("");
+              setNote("");
+              setSubmitAttempted(false);
+              setConfirmationMessage("Scan entry added to this session's recent logs.");
             }}
           >
             <label className="grid gap-2 text-sm">
@@ -87,6 +114,9 @@ export default function ScanPage() {
                   </option>
                 ))}
               </select>
+              {submitAttempted && materialInvalid ? (
+                <span className="text-xs text-red-400">Material is required.</span>
+              ) : null}
             </label>
 
             <label className="grid gap-2 text-sm">
@@ -102,6 +132,9 @@ export default function ScanPage() {
                   </option>
                 ))}
               </select>
+              {submitAttempted && actionInvalid ? (
+                <span className="text-xs text-red-400">Action is required.</span>
+              ) : null}
             </label>
 
             <label className="grid gap-2 text-sm">
@@ -149,6 +182,10 @@ export default function ScanPage() {
             >
               Simulate Scan Entry
             </button>
+
+            {confirmationMessage ? (
+              <p className="text-sm text-emerald-300">{confirmationMessage}</p>
+            ) : null}
           </form>
         </div>
 
