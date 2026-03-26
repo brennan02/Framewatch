@@ -10,8 +10,8 @@ import {
 
 type CategoryData = {
   name: string;
-  description?: string;
-  unit_name?: string;
+  description?: string | null;
+  unit_name?: string | null;
 };
 
 type MaterialAddFormProps = {

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { TopNavLinks } from "../src/components/top-nav-links";
 import {
   createUnitInSupabase,
   deleteUnitInSupabase,
@@ -83,9 +82,6 @@ export default async function UnitsPage({ searchParams }: UnitsPageProps) {
           >
             Back to Materials
           </Link>
-        </div>
-        <div className="mt-5">
-          <TopNavLinks currentPath="/units" />
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">

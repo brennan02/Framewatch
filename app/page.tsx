@@ -73,27 +73,32 @@ export default function HomePage() {
             {
               title: "Inventory In",
               text: "Log incoming lumber, siding, metal, wiring, and other tracked materials.",
+              href: "/inventory",
             },
             {
               title: "Material Out",
               text: "Track what gets used on a job or building without messy paper logs.",
+              href: "/inventory",
             },
             {
-              title: "Waste & Partial Use",
-              text: "Record warped boards, damaged material, cutoffs, and salvage value.",
+              title: "Waste",
+              text: "Record warped boards, damaged material, and defective items.",
+              href: "/waste",
             },
             {
               title: "Simple Reporting",
               text: "See where material loss is happening and what it may be costing.",
+              href: "/reports",
             },
           ].map((item) => (
-            <div
+            <Link
               key={item.title}
-              className="rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-5"
+              href={item.href}
+              className="rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-5 hover:border-cyan-500/40 hover:bg-[#0c1426] transition-colors"
             >
               <h2 className="text-lg font-semibold">{item.title}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-300">{item.text}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

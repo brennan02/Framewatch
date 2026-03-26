@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TopNavLinks } from "../src/components/top-nav-links";
 import {
   fetchInventoryLogsFromSupabase,
   fetchMaterialsFromSupabase,
@@ -104,9 +103,6 @@ export default async function ReportsPage() {
           >
             Back to Dashboard
           </Link>
-        </div>
-        <div className="mt-5">
-          <TopNavLinks currentPath="/reports" />
         </div>
 
         {wasteRelatedLogs.length === 0 ? (

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TopNavLinks } from "../../src/components/top-nav-links";
 import { inventoryLogs } from "../../src/lib/mock-data";
 import { fetchMaterialByIdFromSupabase } from "../../src/lib/supabase";
 import type { InventoryAction } from "../../src/types/inventory";
@@ -81,9 +80,6 @@ export default async function MaterialDetailPage({ params }: MaterialDetailPageP
           >
             Back to Materials
           </Link>
-        </div>
-        <div className="mt-5">
-          <TopNavLinks currentPath={`/materials/${material.id}`} />
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

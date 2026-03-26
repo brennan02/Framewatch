@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { TopNavLinks } from "../src/components/top-nav-links";
 import { MaterialAddForm } from "../src/components/material-add-form";
 import {
   createMaterialInSupabase,
@@ -122,9 +121,6 @@ export default async function MaterialsPage({ searchParams }: MaterialsPageProps
           >
             Back to Dashboard
           </Link>
-        </div>
-        <div className="mt-5">
-          <TopNavLinks currentPath="/materials" />
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">

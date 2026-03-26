@@ -15,6 +15,8 @@ const primaryNavItems = [
 
 const secondaryNavItems = [
   { href: "/materials", label: "Materials" },
+  { href: "/inventory", label: "Inventory" },
+  { href: "/waste", label: "Waste" },
   { href: "/categories", label: "Categories" },
   { href: "/units", label: "Units" },
   { href: "/jobs", label: "Jobs" },

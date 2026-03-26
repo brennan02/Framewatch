@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { TopNavLinks } from "../src/components/top-nav-links";
 import {
   fetchMaterialsFromSupabase,
   fetchInventoryLogsFromSupabase,
@@ -181,9 +180,6 @@ export default function ScanPage() {
           >
             Back to Dashboard
           </Link>
-        </div>
-        <div className="mt-5">
-          <TopNavLinks currentPath="/scan" />
         </div>
 
         {error ? (

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TopNavLinks } from "../src/components/top-nav-links";
 import { fetchInventoryLogsFromSupabase } from "../src/lib/supabase";
 
 type JobSummary = {
@@ -72,9 +71,6 @@ export default async function JobsPage() {
           >
             Back to Dashboard
           </Link>
-        </div>
-        <div className="mt-5">
-          <TopNavLinks currentPath="/jobs" />
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">

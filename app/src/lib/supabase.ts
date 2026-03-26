@@ -1,5 +1,6 @@
 import type { InventoryAction, InventoryLog } from "../types/inventory";
 import type { Material, MaterialCategory, MaterialUnit } from "../types/material";
+import type { WasteLog, WasteDefectReason } from "../types/waste";
 
 type SupabaseMaterialRow = {
   id: string;
@@ -280,16 +281,13 @@ export async function createInventoryLogInSupabase(log: CreateInventoryLogInput)
   const payload: Record<string, string | number | null> = {
     id: crypto.randomUUID(),
     material_id: log.materialId,
-    materialId: log.materialId,
     action: log.action,
     quantity: log.quantity,
     created_at: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
   };
 
   if (log.jobName) {
     payload.job_name = log.jobName;
-    payload.jobName = log.jobName;
   }
 
   if (log.note) {
@@ -389,4 +387,82 @@ export async function createUnitInSupabase(name: string, description?: string) {
 
 export async function deleteUnitInSupabase(unitName: string) {
   return supabaseDelete(`/units?name=eq.${encodeURIComponent(unitName)}`);
+}
+
+// Waste Management Functions
+
+type SupabaseWasteLogRow = {
+  id: string;
+  material_id?: string;
+  materialId?: string;
+  quantity: number;
+  defect_reason?: string;
+  defectReason?: string;
+  job_name?: string | null;
+  jobName?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  createdAt?: string;
+};
+
+const normalizeWasteLog = (row: SupabaseWasteLogRow): WasteLog => ({
+  id: row.id,
+  materialId: row.material_id ?? row.materialId ?? "",
+  quantity: Number(row.quantity) || 0,
+  defectReason: (row.defect_reason ?? row.defectReason ?? "other") as WasteDefectReason,
+  ...(row.job_name ?? row.jobName ? { jobName: row.job_name ?? row.jobName ?? undefined } : {}),
+  ...(row.notes ? { notes: row.notes } : {}),
+  createdAt: row.created_at ?? row.createdAt ?? new Date(0).toISOString(),
+});
+
+export type CreateWasteLogInput = {
+  materialId: string;
+  quantity: number;
+  defectReason: WasteDefectReason;
+  jobName?: string;
+  notes?: string;
+};
+
+export async function fetchWasteLogsFromSupabase() {
+  const result = await supabaseGet<SupabaseWasteLogRow[]>(
+    `/waste_logs?order=created_at.desc`,
+  );
+
+  return {
+    data: (result.data ?? []).map(normalizeWasteLog),
+    error: result.error,
+  };
+}
+
+export async function fetchWasteLogByIdFromSupabase(wasteLogId: string) {
+  const result = await supabaseGet<SupabaseWasteLogRow[]>(
+    `/waste_logs?id=eq.${encodeURIComponent(wasteLogId)}&limit=1`,
+  );
+
+  const log = result.data?.[0] ? normalizeWasteLog(result.data[0]) : null;
+  return { data: log, error: result.error };
+}
+
+export async function createWasteLogInSupabase(log: CreateWasteLogInput) {
+  const payload: Record<string, string | number | null> = {
+    id: crypto.randomUUID(),
+    material_id: log.materialId,
+    quantity: log.quantity,
+    defect_reason: log.defectReason,
+    created_at: new Date().toISOString(),
+  };
+
+  if (log.jobName) {
+    payload.job_name = log.jobName;
+  }
+
+  if (log.notes) {
+    payload.notes = log.notes;
+  }
+
+  return supabasePost("/waste_logs", payload);
+}
+
+export async function deleteWasteLogInSupabase(wasteLogId: string) {
+  return supabaseDelete(`/waste_logs?id=eq.${encodeURIComponent(wasteLogId)}`);
 }
