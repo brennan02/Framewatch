@@ -108,6 +108,22 @@ export default async function MaterialDetailPage({ params }: MaterialDetailPageP
         </div>
 
         <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">
+          <h2 className="text-xl font-semibold">Material QR Code</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Scan value: <span className="font-mono text-white">{material.scanCode}</span>
+          </p>
+          <div className="mt-4 inline-block rounded-xl bg-white p-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(material.scanCode || material.sku)}`}
+              alt={`QR code for ${material.name}`}
+              width={220}
+              height={220}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">
           <h2 className="text-xl font-semibold">Material summary</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {summaryStats.map((stat) => (

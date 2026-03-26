@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { fetchMaterialsFromSupabase } from "../lib/supabase";
 import { updateInventoryAction } from "../actions/inventory";
-import { QRScannerModal } from "./qr-scanner-modal";
+import QrScanner from "./scan/qr-scanner";
 
 type Material = {
   id: string;
   name: string;
   sku: string;
+  scanCode: string;
   category: string;
   unit: string;
 };
@@ -66,7 +67,10 @@ export function InventoryForm({ status, message }: InventoryFormProps) {
     setScanCode(code);
 
     if (code) {
-      const found = materials.find((m) => m.sku === code);
+      const upper = code.toUpperCase();
+      const found = materials.find(
+        (m) => m.sku.toUpperCase() === upper || m.scanCode.toUpperCase() === upper || m.id === code
+      );
       if (found) {
         setSelectedMaterial(found);
       }
@@ -81,26 +85,19 @@ export function InventoryForm({ status, message }: InventoryFormProps) {
   };
 
   const handleQRScan = (scannedValue: string) => {
-    // Try to find material by SKU first
-    const materialBySkU = materials.find((m) => m.sku === scannedValue);
-    if (materialBySkU) {
-      setSelectedMaterial(materialBySkU);
-      setScanCode(scannedValue);
-      setIsScannerOpen(false);
-      return;
-    }
+    setIsScannerOpen(false);
+    const code = scannedValue.trim().toUpperCase();
+    setScanCode(scannedValue.trim());
 
-    // Try to find by material ID if not found by SKU
-    const materialById = materials.find((m) => m.id === scannedValue);
-    if (materialById) {
-      setSelectedMaterial(materialById);
-      setScanCode(materialById.sku);
-      setIsScannerOpen(false);
-      return;
+    const found = materials.find(
+      (m) =>
+        m.scanCode.toUpperCase() === code ||
+        m.sku.toUpperCase() === code ||
+        m.id === scannedValue.trim()
+    );
+    if (found) {
+      setSelectedMaterial(found);
     }
-
-    // If not found, just set the scan code and let user select manually
-    setScanCode(scannedValue);
   };
 
   return (
@@ -117,11 +114,12 @@ export function InventoryForm({ status, message }: InventoryFormProps) {
         </div>
       ) : null}
 
-      <QRScannerModal
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScan={handleQRScan}
-      />
+      {isScannerOpen && (
+        <QrScanner
+          onScan={handleQRScan}
+          onClose={() => setIsScannerOpen(false)}
+        />
+      )}
 
       <form action={updateInventoryAction} className="mt-6 space-y-5">
         {/* Hidden field for material_id */}

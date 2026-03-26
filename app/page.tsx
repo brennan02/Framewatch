@@ -28,10 +28,10 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="/scan"
+              href="/inventory"
               className="rounded-xl border border-cyan-400/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#111a2f]"
             >
-              Log a Scan Entry
+              Log Inventory
             </Link>
           </div>
 

@@ -10,12 +10,11 @@ type TopNavLinksProps = {
 
 const primaryNavItems = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/scan", label: "Scan" },
+  { href: "/inventory", label: "Inventory" },
 ];
 
 const secondaryNavItems = [
   { href: "/materials", label: "Materials" },
-  { href: "/inventory", label: "Inventory" },
   { href: "/waste", label: "Waste" },
   { href: "/categories", label: "Categories" },
   { href: "/units", label: "Units" },

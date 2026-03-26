@@ -30,7 +30,8 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours, but session resets on browser close if using session-only behavior
+      maxAge: 24 * 60 * 60, // 24 hours in seconds
+      path: "/",
     });
 
     return response;

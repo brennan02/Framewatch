@@ -13,7 +13,6 @@ export function TopHeader() {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/scan", label: "Scan" },
     { href: "/inventory", label: "Inventory" },
     { href: "/materials", label: "Materials" },
     { href: "/waste", label: "Waste" },

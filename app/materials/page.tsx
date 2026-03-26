@@ -13,6 +13,14 @@ import {
 const parseBooleanFromForm = (value: FormDataEntryValue | null) =>
   value === "on" || value === "true";
 
+const buildScanCode = (sku: string) => {
+  const cleaned = sku.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return cleaned ? `FW-${cleaned}` : "";
+};
+
+const buildQrCodeUrl = (value: string) =>
+  `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(value)}`;
+
 const requiredFields: Array<keyof Pick<CreateMaterialInput, "name" | "sku" | "category" | "unit">> = [
   "name",
   "sku",
@@ -49,8 +57,8 @@ async function addMaterialAction(formData: FormData) {
     unit,
     active,
     ...(color ? { color } : {}),
-    ...(scanCode ? { scanCode } : {}),
-    ...(qrCode ? { qrCode } : {}),
+    scanCode: scanCode || buildScanCode(sku) || sku,
+    qrCode: qrCode || buildQrCodeUrl(sku),
   };
 
   const firstMissingField = requiredFields.find((field) => !candidate[field]);
