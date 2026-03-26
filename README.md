@@ -20,6 +20,17 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase Environment Setup
+
+FrameWatch is beginning a gradual transition from mock data to Supabase. Add these variables to `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+Until those values are configured, the app continues using existing mock-data flows.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
