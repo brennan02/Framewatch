@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { TopNavLinks } from "../../src/components/top-nav-links";
-import { inventoryLogs, materials } from "../../src/lib/mock-data";
+import { inventoryLogs } from "../../src/lib/mock-data";
+import { fetchMaterialByIdFromSupabase } from "../../src/lib/supabase";
 import type { InventoryAction } from "../../src/types/inventory";
 
 type MaterialDetailPageProps = {
-  params: {
+  params: Promise<{
     materialId: string;
-  };
+  }>;
 };
 
 const summaryActions: InventoryAction[] = ["in", "out", "waste", "salvaged"];
@@ -14,8 +15,9 @@ const summaryActions: InventoryAction[] = ["in", "out", "waste", "salvaged"];
 const formatActionLabel = (action: InventoryAction) =>
   action.charAt(0).toUpperCase() + action.slice(1);
 
-export default function MaterialDetailPage({ params }: MaterialDetailPageProps) {
-  const material = materials.find((item) => item.id === params.materialId);
+export default async function MaterialDetailPage({ params }: MaterialDetailPageProps) {
+  const { materialId } = await params;
+  const { data: material } = await fetchMaterialByIdFromSupabase(materialId);
 
   if (!material) {
     return (
@@ -26,7 +28,7 @@ export default function MaterialDetailPage({ params }: MaterialDetailPageProps) 
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">Material not found</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-            We couldn&apos;t find a material with ID <span className="font-mono">{params.materialId}</span>.
+            We couldn&apos;t find a material with ID <span className="font-mono">{materialId}</span>.
           </p>
 
           <div className="mt-8 flex gap-3">
