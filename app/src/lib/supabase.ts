@@ -267,3 +267,98 @@ export async function updateInventoryLogInSupabase(
 
   return supabasePatch(`/inventory_logs?id=eq.${encodeURIComponent(logId)}`, payload);
 }
+
+export type CreateInventoryLogInput = {
+  materialId: string;
+  action: InventoryAction;
+  quantity: number;
+  jobName?: string;
+  note?: string;
+};
+
+export async function createInventoryLogInSupabase(log: CreateInventoryLogInput) {
+  const payload: Record<string, string | number | null> = {
+    id: crypto.randomUUID(),
+    material_id: log.materialId,
+    materialId: log.materialId,
+    action: log.action,
+    quantity: log.quantity,
+    created_at: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+
+  if (log.jobName) {
+    payload.job_name = log.jobName;
+    payload.jobName = log.jobName;
+  }
+
+  if (log.note) {
+    payload.note = log.note;
+  }
+
+  return supabasePost("/inventory_logs", payload);
+}
+
+type SupabaseCategoryRow = {
+  id: string;
+  name: string;
+  description?: string | null;
+  created_at?: string;
+};
+
+export async function fetchCategoriesFromSupabase() {
+  const result = await supabaseGet<SupabaseCategoryRow[]>(
+    `/categories?order=name.asc`,
+  );
+
+  return {
+    data: (result.data ?? []).map((cat) => cat.name),
+    error: result.error,
+  };
+}
+
+export async function createCategoryInSupabase(name: string, description?: string) {
+  const payload: Record<string, string | null> = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    description: description?.trim() ?? null,
+  };
+
+  return supabasePost("/categories", payload);
+}
+
+export async function deleteCategoryInSupabase(categoryName: string) {
+  return supabaseDelete(`/categories?name=eq.${encodeURIComponent(categoryName)}`);
+}
+
+type SupabaseUnitRow = {
+  id: string;
+  name: string;
+  description?: string | null;
+  created_at?: string;
+};
+
+export async function fetchUnitsFromSupabase() {
+  const result = await supabaseGet<SupabaseUnitRow[]>(
+    `/units?order=name.asc`,
+  );
+
+  return {
+    data: (result.data ?? []).map((unit) => unit.name),
+    error: result.error,
+  };
+}
+
+export async function createUnitInSupabase(name: string, description?: string) {
+  const payload: Record<string, string | null> = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    description: description?.trim() ?? null,
+  };
+
+  return supabasePost("/units", payload);
+}
+
+export async function deleteUnitInSupabase(unitName: string) {
+  return supabaseDelete(`/units?name=eq.${encodeURIComponent(unitName)}`);
+}
