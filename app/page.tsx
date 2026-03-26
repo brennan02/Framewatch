@@ -47,6 +47,13 @@ export default function HomePage() {
             >
               View Jobs
             </Link>
+
+            <Link
+              href="/reports"
+              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
+            >
+              View Reports
+            </Link>
           </div>
         </div>
 
