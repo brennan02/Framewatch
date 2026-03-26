@@ -122,6 +122,29 @@ async function supabasePost<TBody extends object>(path: string, body: TBody) {
   return { error: null };
 }
 
+async function supabaseDelete(path: string) {
+  if (!isSupabaseConfigured()) {
+    return { error: "Supabase env vars are not configured yet." };
+  }
+
+  const url = `${supabaseUrl}/rest/v1${path}`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseAnonKey as string,
+      Authorization: `Bearer ${supabaseAnonKey as string}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    return { error: `Supabase delete failed with status ${response.status}.` };
+  }
+
+  return { error: null };
+}
+
 export async function fetchMaterialsFromSupabase() {
   const result = await supabaseGet<SupabaseMaterialRow[]>(
     `/materials?order=name.asc`,
@@ -177,4 +200,12 @@ export async function createMaterialInSupabase(material: CreateMaterialInput) {
   }
 
   return supabasePost("/materials", payload);
+}
+
+export async function deleteMaterialInSupabase(materialId: string) {
+  return supabaseDelete(`/materials?id=eq.${encodeURIComponent(materialId)}`);
+}
+
+export async function deleteInventoryLogInSupabase(logId: string) {
+  return supabaseDelete(`/inventory_logs?id=eq.${encodeURIComponent(logId)}`);
 }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { TopNavLinks } from "../src/components/top-nav-links";
 import {
   createMaterialInSupabase,
+  deleteMaterialInSupabase,
   fetchMaterialsFromSupabase,
   type CreateMaterialInput,
 } from "../src/lib/supabase";
@@ -54,6 +55,24 @@ async function addMaterialAction(formData: FormData) {
 
   revalidatePath("/materials");
   redirect("/materials?status=success");
+}
+
+async function deleteMaterialAction(formData: FormData) {
+  "use server";
+
+  const materialId = String(formData.get("material_id") ?? "").trim();
+  if (!materialId) {
+    redirect("/materials?status=error&message=Missing material ID");
+  }
+
+  const { error } = await deleteMaterialInSupabase(materialId);
+
+  if (error) {
+    redirect(`/materials?status=error&message=${encodeURIComponent(error)}`);
+  }
+
+  revalidatePath("/materials");
+  redirect("/materials?status=deleted");
 }
 
 type MaterialsPageProps = {
@@ -108,6 +127,12 @@ export default async function MaterialsPage({ searchParams }: MaterialsPageProps
           {params.status === "success" ? (
             <p className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
               Material added successfully.
+            </p>
+          ) : null}
+
+          {params.status === "deleted" ? (
+            <p className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+              Material deleted successfully.
             </p>
           ) : null}
 
@@ -238,17 +263,31 @@ export default async function MaterialsPage({ searchParams }: MaterialsPageProps
 
               <div className="mt-4 space-y-3">
                 {materials.map((material) => (
-                  <Link
+                  <div
                     key={material.id}
-                    href={`/materials/${material.id}`}
-                    className="grid gap-2 rounded-xl border border-cyan-500/20 bg-[#050914] px-4 py-3 transition hover:border-cyan-400/60 hover:bg-[#111a2f] sm:grid-cols-5"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-cyan-500/20 bg-[#050914] px-4 py-3 transition hover:border-cyan-400/60 hover:bg-[#111a2f]"
                   >
-                    <p className="font-medium text-white">{material.name}</p>
-                    <p className="text-sm text-slate-300">{material.sku}</p>
-                    <p className="text-sm capitalize text-slate-300">{material.category}</p>
-                    <p className="text-sm text-slate-300">{material.unit}</p>
-                    <p className="text-sm text-slate-300">{material.color ?? "—"}</p>
-                  </Link>
+                    <Link
+                      href={`/materials/${material.id}`}
+                      className="flex-1 grid gap-2 sm:grid-cols-5"
+                    >
+                      <p className="font-medium text-white">{material.name}</p>
+                      <p className="text-sm text-slate-300">{material.sku}</p>
+                      <p className="text-sm capitalize text-slate-300">{material.category}</p>
+                      <p className="text-sm text-slate-300">{material.unit}</p>
+                      <p className="text-sm text-slate-300">{material.color ?? "—"}</p>
+                    </Link>
+
+                    <form action={deleteMaterialAction} className="flex-shrink-0">
+                      <input type="hidden" name="material_id" value={material.id} />
+                      <button
+                        type="submit"
+                        className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                      >
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 ))}
               </div>
             </>
