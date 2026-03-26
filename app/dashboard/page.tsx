@@ -106,6 +106,13 @@ export default function DashboardPage() {
             </Link>
 
             <Link
+              href="/jobs"
+              className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-900"
+            >
+              View Jobs
+            </Link>
+
+            <Link
               href="/"
               className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-900"
             >

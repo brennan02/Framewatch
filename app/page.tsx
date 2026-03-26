@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -18,26 +20,33 @@ export default function HomePage() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <a
+            <Link
               href="/dashboard"
               className="rounded-xl bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:opacity-90"
             >
               View Dashboard
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/materials"
               className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
             >
               View Materials
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/scan"
               className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
             >
               Open Scan Flow
-            </a>
+            </Link>
+
+            <Link
+              href="/jobs"
+              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
+            >
+              View Jobs
+            </Link>
           </div>
         </div>
 
