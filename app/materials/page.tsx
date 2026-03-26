@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { materials } from "../src/lib/mock-data";
 
 export default function MaterialsPage() {
@@ -17,12 +18,12 @@ export default function MaterialsPage() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/dashboard"
             className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold hover:bg-slate-900"
           >
             Back Dashboard
-          </a>
+          </Link>
         </div>
 
         <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
@@ -36,16 +37,17 @@ export default function MaterialsPage() {
 
           <div className="mt-4 space-y-3">
             {materials.map((material) => (
-              <div
+              <Link
                 key={material.id}
-                className="grid gap-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 sm:grid-cols-5"
+                href={`/materials/${material.id}`}
+                className="grid gap-2 rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 transition hover:border-amber-500/60 hover:bg-slate-900 sm:grid-cols-5"
               >
                 <p className="font-medium text-white">{material.name}</p>
                 <p className="text-sm text-slate-300">{material.sku}</p>
                 <p className="text-sm capitalize text-slate-300">{material.category}</p>
                 <p className="text-sm text-slate-300">{material.unit}</p>
                 <p className="text-sm text-slate-300">{material.color ?? "—"}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
