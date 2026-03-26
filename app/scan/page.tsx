@@ -17,6 +17,8 @@ const actionOptions: { value: InventoryAction; label: string }[] = [
 
 export default function ScanPage() {
   const [materialId, setMaterialId] = useState(materials[0]?.id ?? "");
+  const [materialCodeInput, setMaterialCodeInput] = useState("");
+  const [codeLookupTouched, setCodeLookupTouched] = useState(false);
   const [action, setAction] = useState<InventoryAction>("in");
   const [quantity, setQuantity] = useState("1");
   const [jobName, setJobName] = useState("");
@@ -28,6 +30,14 @@ export default function ScanPage() {
   const selectedMaterial = useMemo(
     () => materials.find((material) => material.id === materialId),
     [materialId]
+  );
+  const normalizedCodeInput = materialCodeInput.trim().toUpperCase();
+  const matchedMaterialByCode = useMemo(
+    () =>
+      materials.find(
+        (material) => material.scanCode.toUpperCase() === normalizedCodeInput
+      ),
+    [normalizedCodeInput]
   );
 
   const quantityValue = Number(quantity);
@@ -107,6 +117,45 @@ export default function ScanPage() {
             }}
           >
             <label className="grid gap-2 text-sm">
+              <span className="text-slate-300">Material Code (Simulated QR)</span>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={materialCodeInput}
+                  onChange={(event) => {
+                    setMaterialCodeInput(event.target.value);
+                    setCodeLookupTouched(false);
+                  }}
+                  placeholder="Paste or type code (e.g. FW-LUM-2408)"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCodeLookupTouched(true);
+
+                    if (matchedMaterialByCode) {
+                      setMaterialId(matchedMaterialByCode.id);
+                    }
+                  }}
+                  className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+                >
+                  Match Code
+                </button>
+              </div>
+              {codeLookupTouched && normalizedCodeInput && matchedMaterialByCode ? (
+                <span className="text-xs text-emerald-300">
+                  Code matched: {matchedMaterialByCode.name} ({matchedMaterialByCode.sku})
+                </span>
+              ) : null}
+              {codeLookupTouched && normalizedCodeInput && !matchedMaterialByCode ? (
+                <span className="text-xs text-red-400">
+                  No material found for that code. Check the value or select manually.
+                </span>
+              ) : null}
+            </label>
+
+            <label className="grid gap-2 text-sm">
               <span className="text-slate-300">Material</span>
               <select
                 value={materialId}
@@ -115,7 +164,7 @@ export default function ScanPage() {
               >
                 {materials.map((material) => (
                   <option key={material.id} value={material.id}>
-                    {material.name} ({material.sku})
+                    {material.name} ({material.sku}) • {material.scanCode}
                   </option>
                 ))}
               </select>
@@ -192,6 +241,24 @@ export default function ScanPage() {
               <p className="text-sm text-emerald-300">{confirmationMessage}</p>
             ) : null}
           </form>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+          <h2 className="text-xl font-semibold">Demo Material Codes</h2>
+          <p className="mt-2 text-sm text-slate-300">
+            Use these sample codes to simulate a QR scan lookup.
+          </p>
+          <ul className="mt-4 space-y-2 text-sm text-slate-200">
+            {materials.map((material) => (
+              <li
+                key={material.id}
+                className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2"
+              >
+                <span className="font-semibold text-amber-300">{material.scanCode}</span>{" "}
+                <span className="text-slate-400">→</span> {material.name}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">

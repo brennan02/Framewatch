@@ -18,6 +18,7 @@ export type Material = {
   id: string;
   name: string;
   sku: string;
+  scanCode: string;
   category: MaterialCategory;
   unit: MaterialUnit;
   color?: string;
