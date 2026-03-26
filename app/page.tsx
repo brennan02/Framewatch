@@ -24,37 +24,39 @@ export default function HomePage() {
               href="/dashboard"
               className="rounded-xl bg-amber-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:opacity-90"
             >
-              View Dashboard
-            </Link>
-
-            <Link
-              href="/materials"
-              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
-            >
-              View Materials
+              Open Dashboard
             </Link>
 
             <Link
               href="/scan"
               className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
             >
-              Open Scan Flow
-            </Link>
-
-            <Link
-              href="/jobs"
-              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
-            >
-              View Jobs
-            </Link>
-
-            <Link
-              href="/reports"
-              className="rounded-xl border border-slate-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
-            >
-              View Reports
+              Log a Scan Entry
             </Link>
           </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-300">
+            <span className="text-slate-500">Quick links:</span>
+            <Link href="/materials" className="underline-offset-4 hover:underline">
+              Materials
+            </Link>
+            <Link href="/jobs" className="underline-offset-4 hover:underline">
+              Jobs
+            </Link>
+            <Link href="/reports" className="underline-offset-4 hover:underline">
+              Reports
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 text-sm text-slate-200">
+          <p className="font-semibold text-amber-300">Investor/Beta Demo Path</p>
+          <p className="mt-2 leading-6 text-slate-200">
+            Start in <span className="font-semibold">Scan</span> to log activity, then open{" "}
+            <span className="font-semibold">Dashboard</span> and{" "}
+            <span className="font-semibold">Reports</span> to show waste visibility and
+            salvage impact.
+          </p>
         </div>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
