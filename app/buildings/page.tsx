@@ -7,6 +7,7 @@ import {
   fetchBuildingsFromSupabase,
   fetchJobTypesFromSupabase,
 } from "../src/lib/supabase";
+import { PrintBuildingQrButton } from "../src/components/buildings/print-building-qr-button";
 
 function buildSpecialId() {
   return `BLD-${crypto.randomUUID().split("-")[0].toUpperCase()}`;
@@ -201,15 +202,22 @@ export default async function BuildingsPage({ searchParams }: BuildingsPageProps
                         ) : null}
                       </div>
 
-                      <form action={deleteBuildingAction}>
-                        <input type="hidden" name="building_id" value={building.id} />
-                        <button
-                          type="submit"
-                          className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/20"
-                        >
-                          Delete
-                        </button>
-                      </form>
+                      <div className="flex items-center gap-2">
+                        <PrintBuildingQrButton
+                          buildingName={building.name}
+                          specialId={building.specialId}
+                          qrValue={building.qrValue}
+                        />
+                        <form action={deleteBuildingAction}>
+                          <input type="hidden" name="building_id" value={building.id} />
+                          <button
+                            type="submit"
+                            className="rounded-lg border border-red-400/40 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/20"
+                          >
+                            Delete
+                          </button>
+                        </form>
+                      </div>
                     </div>
 
                     <div className="mt-3 rounded-lg border border-cyan-500/20 bg-[#111a2f]/80 p-3">

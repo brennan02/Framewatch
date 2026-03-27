@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   const actionTotals = actionOrder.map((action) => {
     const total = logs
       .filter((log) => log.action === action)
-      .reduce((sum, log) => sum + log.quantity, 0);
+      .reduce((sum, log) => sum + Math.abs(log.quantity), 0);
 
     return { action, total };
   });
@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
   const materialActivity = Object.entries(
     logs.reduce<Record<string, number>>((acc, log) => {
-      acc[log.materialId] = (acc[log.materialId] ?? 0) + log.quantity;
+      acc[log.materialId] = (acc[log.materialId] ?? 0) + Math.abs(log.quantity);
       return acc;
     }, {}),
   )
@@ -46,6 +46,22 @@ export default async function DashboardPage() {
     .sort((a, b) => b.total - a.total)
     .slice(0, 5);
 
+  const inventoryRemaining = materials
+    .map((material) => {
+      const netQuantity = logs
+        .filter((log) => log.materialId === material.id)
+        .reduce((sum, log) => sum + log.quantity, 0);
+
+      return {
+        materialId: material.id,
+        materialName: material.name,
+        remaining: Math.max(0, netQuantity),
+      };
+    })
+    .sort((a, b) => b.remaining - a.remaining);
+
+  const totalRemaining = inventoryRemaining.reduce((sum, item) => sum + item.remaining, 0);
+
   const jobActivity = Object.entries(
     logs.reduce<Record<string, number>>((acc, log) => {
       const jobName = log.jobName?.trim();
@@ -53,7 +69,7 @@ export default async function DashboardPage() {
         return acc;
       }
 
-      acc[jobName] = (acc[jobName] ?? 0) + log.quantity;
+      acc[jobName] = (acc[jobName] ?? 0) + Math.abs(log.quantity);
       return acc;
     }, {}),
   )
@@ -218,7 +234,7 @@ export default async function DashboardPage() {
                       </div>
 
                       <p className="mt-2 text-sm text-slate-300">
-                        Quantity: {item.quantity}
+                        Quantity: {Math.abs(item.quantity)}
                         {item.jobName ? ` • Job: ${item.jobName}` : ""}
                       </p>
 
@@ -229,6 +245,30 @@ export default async function DashboardPage() {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold">Inventory Remaining</h2>
+            <p className="text-sm text-slate-300">Total left: {totalRemaining}</p>
+          </div>
+
+          {inventoryRemaining.length === 0 ? (
+            <p className="mt-3 text-sm leading-6 text-slate-300">No inventory data is available yet.</p>
+          ) : (
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {inventoryRemaining.map((item) => (
+                <div
+                  key={item.materialId}
+                  className="rounded-xl border border-cyan-500/20 bg-[#050914] px-4 py-3"
+                >
+                  <p className="font-medium text-white">{item.materialName}</p>
+                  <p className="mt-1 text-xs text-slate-400">Remaining on hand</p>
+                  <p className="mt-2 text-lg font-bold text-cyan-200">{item.remaining}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </main>
