@@ -629,6 +629,12 @@ export async function deleteUsedMaterialLogInSupabase(logId: string) {
   return supabaseDelete(`/used_materials_logs?id=eq.${encodeURIComponent(logId)}`);
 }
 
+export async function deleteAllDataFromTable(tableName: string) {
+  // Use 'id is not null' to match all rows (every table has an id)
+  // Supabase REST API requires a filter clause
+  return supabaseDelete(`/${tableName}?id=not.is.null`);
+}
+
 // Unit Conversions Functions
 
 type SupabaseUnitConversionRow = {

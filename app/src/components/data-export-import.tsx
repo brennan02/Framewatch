@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { exportAllDataAsJSON } from "../../src/actions/data-export";
+import { exportAllDataAsJSON, resetAllData, importDataFromJSON } from "../../src/actions/data-export";
 
 export function DataExportImport() {
   const [isExporting, setIsExporting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -63,13 +65,17 @@ export function DataExportImport() {
         }
       }
 
-      // Show preview
-      setMessage(
-        `Preview: ${Object.entries(data)
-          .map(([key, value]: [string, any]) => `${key}: ${value.length} records`)
-          .join(", ")}`
-      );
-      setUploadStatus("success");
+      // Import the data
+      const result = await importDataFromJSON(data);
+      
+      if (result.success) {
+        setMessage(result.message);
+        setUploadStatus("success");
+      } else {
+        setMessage(result.message);
+        setUploadStatus("error");
+      }
+      
       setTimeout(() => {
         setUploadStatus("idle");
         setMessage("");
@@ -85,6 +91,24 @@ export function DataExportImport() {
 
     // Reset file input
     if (e.target) e.target.value = "";
+  };
+
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      const result = await resetAllData();
+      if (result.success) {
+        setMessage("✓ " + result.message);
+        setShowResetConfirm(false);
+        setTimeout(() => setMessage(""), 3000);
+      } else {
+        setMessage("✗ " + result.message);
+      }
+    } catch (error) {
+      setMessage("✗ Reset failed: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
@@ -151,6 +175,59 @@ export function DataExportImport() {
           <li>✓ When migrating, company_id will be added automatically</li>
         </ul>
       </div>
+
+      {/* Reset Section */}
+      {!showResetConfirm ? (
+        <div className="rounded-lg border border-red-400/20 bg-red-500/10 p-6">
+          <h3 className="text-lg font-semibold text-red-200 mb-2">Danger Zone</h3>
+          <p className="text-sm text-slate-400 mb-4">
+            Permanently delete all data. This action cannot be undone.
+          </p>
+          <button
+            onClick={() => setShowResetConfirm(true)}
+            className="rounded-lg border border-red-400/60 bg-red-500/10 px-6 py-2 font-semibold text-red-200 hover:bg-red-500/20 text-sm"
+          >
+            Reset All Data
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-red-400/60 bg-red-500/20 p-6">
+          <h3 className="text-lg font-semibold text-red-200 mb-2">Confirm Data Reset</h3>
+          <p className="text-sm text-slate-300 mb-4">
+            This will permanently delete all data from materials, inventory logs, waste logs, used materials, units, categories, job types, buildings, and conversions.
+          </p>
+          <p className="text-sm text-red-300 font-semibold mb-4">This action cannot be undone.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={handleReset}
+              disabled={isResetting}
+              className="rounded-lg border border-red-400/60 bg-red-600 px-6 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50 text-sm"
+            >
+              {isResetting ? "Resetting..." : "Yes, Delete Everything"}
+            </button>
+            <button
+              onClick={() => setShowResetConfirm(false)}
+              disabled={isResetting}
+              className="rounded-lg border border-slate-400/60 bg-slate-600 px-6 py-2 font-semibold text-white hover:bg-slate-700 disabled:opacity-50 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+          {message && (
+            <div className={`mt-3 text-sm ${message.includes("✓") ? "text-green-300" : "text-red-300"}`}>
+              {message}
+              {message.includes("RLS policies") && (
+                <div className="mt-2 text-xs text-slate-300 border-t border-slate-600 pt-2">
+                  <p>If RLS is blocking deletion, you can disable it in Supabase:</p>
+                  <p className="mt-1 font-mono text-slate-400">1. Go to your table in Supabase</p>
+                  <p className="font-mono text-slate-400">2. Click "Authentication" tab</p>
+                  <p className="font-mono text-slate-400">3. Toggle "Enable RLS" off</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
