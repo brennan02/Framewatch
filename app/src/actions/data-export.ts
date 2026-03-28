@@ -116,25 +116,31 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
       return { success: false, message: "Supabase configuration missing" };
     }
 
-    // Helper function to remove ID and timestamp fields before import
-    const stripIds = (records: any[]): any[] => {
+    // Helper function to clean records for import
+    // Strips IDs, timestamps, and camelCase aliases that aren't real DB columns
+    const cleanRecords = (records: any[], validColumns: string[]): any[] => {
       if (!Array.isArray(records)) return [];
       return records.map(record => {
-        const { id, created_at, updated_at, ...rest } = record;
-        return rest;
+        const cleaned: any = {};
+        for (const col of validColumns) {
+          if (record[col] !== undefined) {
+            cleaned[col] = record[col];
+          }
+        }
+        return cleaned;
       });
     };
 
     const importOrder = [
-      { table: "units", records: stripIds(data.units || []) },
-      { table: "buildings", records: stripIds(data.buildings || []) },
-      { table: "categories", records: stripIds(data.categories || []) },
-      { table: "job_types", records: stripIds(data.job_types || []) },
-      { table: "materials", records: stripIds(data.materials || []) },
-      { table: "unit_conversions", records: stripIds(data.unit_conversions || []) },
-      { table: "inventory_logs", records: stripIds(data.inventory_logs || []) },
-      { table: "waste_logs", records: stripIds(data.waste_logs || []) },
-      { table: "used_materials_logs", records: stripIds(data.used_materials_logs || []) },
+      { table: "units", records: cleanRecords(data.units || [], ["name"]) },
+      { table: "buildings", records: cleanRecords(data.buildings || [], ["name", "address", "description"]) },
+      { table: "categories", records: cleanRecords(data.categories || [], ["name", "unit_name"]) },
+      { table: "job_types", records: cleanRecords(data.job_types || [], ["name", "description"]) },
+      { table: "materials", records: cleanRecords(data.materials || [], ["name", "sku", "category", "unit", "color", "active", "scan_code", "qr_code"]) },
+      { table: "unit_conversions", records: cleanRecords(data.unit_conversions || [], ["source_unit", "target_unit", "conversion_factor", "description"]) },
+      { table: "inventory_logs", records: cleanRecords(data.inventory_logs || [], ["material_id", "action", "quantity", "job_name", "note"]) },
+      { table: "waste_logs", records: cleanRecords(data.waste_logs || [], ["material_id", "quantity", "reason", "note", "job_name"]) },
+      { table: "used_materials_logs", records: cleanRecords(data.used_materials_logs || [], ["material_id", "quantity", "size", "unit", "note", "job_name"]) },
     ];
 
     console.log("Import started with data:", {
