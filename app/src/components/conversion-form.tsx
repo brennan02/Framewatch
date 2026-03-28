@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { createConversionAction } from "../actions/conversion";
 
 export function ConversionForm({ units }: { units: string[] }) {
@@ -10,6 +11,10 @@ export function ConversionForm({ units }: { units: string[] }) {
   const status = searchParams.get("status");
   const error = searchParams.get("error");
   const message = searchParams.get("message");
+
+  const [sourceUnit, setSourceUnit] = useState("");
+  const [targetUnit, setTargetUnit] = useState("");
+  const [factor, setFactor] = useState("");
 
   return (
     <form action={createConversionAction} className="space-y-4">
@@ -30,6 +35,8 @@ export function ConversionForm({ units }: { units: string[] }) {
         </label>
         <select
           name="sourceUnit"
+          value={sourceUnit}
+          onChange={(e) => setSourceUnit(e.target.value)}
           required
           className="w-full rounded-lg border border-cyan-400/30 bg-[#0f1729] px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
         >
@@ -48,6 +55,8 @@ export function ConversionForm({ units }: { units: string[] }) {
         </label>
         <select
           name="targetUnit"
+          value={targetUnit}
+          onChange={(e) => setTargetUnit(e.target.value)}
           required
           className="w-full rounded-lg border border-cyan-400/30 bg-[#0f1729] px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
         >
@@ -65,31 +74,27 @@ export function ConversionForm({ units }: { units: string[] }) {
           Conversion Factor *
         </label>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-400">1</span>
-          <input
-            type="text"
-            name="sourceUnitDisplay"
-            disabled
-            className="flex-1 rounded-lg border border-cyan-400/20 bg-[#0a1120] px-3 py-2 text-sm text-slate-500"
-          />
-          <span className="text-sm text-slate-400">=</span>
+          <div className="text-sm text-slate-400 min-w-fit">1</div>
+          <div className="flex-1 rounded-lg border border-cyan-400/30 bg-[#0f1729] px-3 py-2 text-sm text-slate-300">
+            {sourceUnit || "(source unit)"}
+          </div>
+          <div className="text-sm text-slate-400">=</div>
           <input
             type="number"
             name="conversionFactor"
+            value={factor}
+            onChange={(e) => setFactor(e.target.value)}
             required
             min="0"
             step="0.0001"
             placeholder="12"
-            className="w-20 rounded-lg border border-cyan-400/30 bg-[#0f1729] px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
+            className="w-24 rounded-lg border border-cyan-400/30 bg-[#0f1729] px-3 py-2 text-white text-sm focus:border-cyan-400 focus:outline-none"
           />
-          <input
-            type="text"
-            name="targetUnitDisplay"
-            disabled
-            className="flex-1 rounded-lg border border-cyan-400/20 bg-[#0a1120] px-3 py-2 text-sm text-slate-500"
-          />
+          <div className="flex-1 rounded-lg border border-cyan-400/30 bg-[#0f1729] px-3 py-2 text-sm text-slate-300">
+            {targetUnit || "(target unit)"}
+          </div>
         </div>
-        <p className="mt-1 text-xs text-slate-400">
+        <p className="mt-2 text-xs text-slate-400">
           Example: 1 foot = 12 inches (enter 12)
         </p>
       </div>

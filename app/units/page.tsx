@@ -76,12 +76,20 @@ export default async function UnitsPage({ searchParams }: UnitsPageProps) {
             </p>
           </div>
 
-          <Link
-            href="/materials"
-            className="rounded-xl border border-cyan-400/30 px-4 py-2 text-sm font-semibold hover:bg-[#111a2f]"
-          >
-            Back to Materials
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/units/conversions"
+              className="rounded-xl border border-blue-400/30 bg-blue-500/10 px-4 py-2 text-sm font-semibold text-blue-200 hover:bg-blue-500/20"
+            >
+              Unit Conversions
+            </Link>
+            <Link
+              href="/materials"
+              className="rounded-xl border border-cyan-400/30 px-4 py-2 text-sm font-semibold hover:bg-[#111a2f]"
+            >
+              Back to Materials
+            </Link>
+          </div>
         </div>
 
         <div className="mt-10 rounded-2xl border border-cyan-500/20 bg-[#0c1426]/80 p-6">
