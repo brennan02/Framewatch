@@ -24,6 +24,7 @@ export function TopHeader() {
     { href: "/categories", label: "Categories" },
     { href: "/units", label: "Units" },
     { href: "/jobs", label: "Jobs" },
+    { href: "/admin/data-export", label: "Data Export" },
   ];
 
   const isRouteActive = (href: string) => {
