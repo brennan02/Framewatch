@@ -116,16 +116,25 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
       return { success: false, message: "Supabase configuration missing" };
     }
 
+    // Helper function to remove ID fields before import
+    const stripIds = (records: any[]): any[] => {
+      if (!Array.isArray(records)) return [];
+      return records.map(record => {
+        const { id, ...rest } = record;
+        return rest;
+      });
+    };
+
     const importOrder = [
-      { table: "units", records: data.units || [] },
-      { table: "buildings", records: data.buildings || [] },
-      { table: "categories", records: data.categories || [] },
-      { table: "job_types", records: data.job_types || [] },
-      { table: "materials", records: data.materials || [] },
-      { table: "unit_conversions", records: data.unit_conversions || [] },
-      { table: "inventory_logs", records: data.inventory_logs || [] },
-      { table: "waste_logs", records: data.waste_logs || [] },
-      { table: "used_materials_logs", records: data.used_materials_logs || [] },
+      { table: "units", records: stripIds(data.units || []) },
+      { table: "buildings", records: stripIds(data.buildings || []) },
+      { table: "categories", records: stripIds(data.categories || []) },
+      { table: "job_types", records: stripIds(data.job_types || []) },
+      { table: "materials", records: stripIds(data.materials || []) },
+      { table: "unit_conversions", records: stripIds(data.unit_conversions || []) },
+      { table: "inventory_logs", records: stripIds(data.inventory_logs || []) },
+      { table: "waste_logs", records: stripIds(data.waste_logs || []) },
+      { table: "used_materials_logs", records: stripIds(data.used_materials_logs || []) },
     ];
 
     const failedTables: string[] = [];
