@@ -164,12 +164,15 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
       records.map(r => {
         const name = typeof r === "string" ? r : r.name;
         const description = typeof r === "object" ? (r.description ?? null) : null;
-        return { id: crypto.randomUUID(), name, description };
+        const id = typeof r === "object" && typeof r.id === "string" && r.id
+          ? r.id
+          : crypto.randomUUID();
+        return { id, name, description };
       });
 
     const mapBuildings = (records: any[]): any[] =>
       records.map(r => ({
-        id: crypto.randomUUID(),
+        id: typeof r.id === "string" && r.id ? r.id : crypto.randomUUID(),
         name: r.name,
         special_id: r.special_id || r.specialId || null,
         qr_value: r.qr_value || r.qrValue || null,
@@ -179,8 +182,11 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
     const mapCategories = (records: any[]): any[] =>
       records.map(r => {
         const name = typeof r === "string" ? r : r.name;
+        const id = typeof r === "object" && typeof r.id === "string" && r.id
+          ? r.id
+          : crypto.randomUUID();
         return {
-          id: crypto.randomUUID(),
+          id,
           name,
           unit_name: (typeof r === "object" && r.unit_name) ? r.unit_name : null,
           description: (typeof r === "object" && r.description) ? r.description : null,
@@ -189,7 +195,7 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
 
     const mapMaterials = (records: any[]): any[] =>
       records.map(r => ({
-        id: crypto.randomUUID(),
+        id: typeof r.id === "string" && r.id ? r.id : crypto.randomUUID(),
         name: r.name,
         sku: r.sku,
         category: r.category,
@@ -210,7 +216,7 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
 
     const mapInventoryLogs = (records: any[]): any[] =>
       records.map(r => ({
-        id: crypto.randomUUID(),
+        id: typeof r.id === "string" && r.id ? r.id : crypto.randomUUID(),
         material_id: r.material_id || r.materialId,
         action: r.action,
         quantity: r.quantity,
@@ -220,7 +226,7 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
 
     const mapWasteLogs = (records: any[]): any[] =>
       records.map(r => ({
-        id: crypto.randomUUID(),
+        id: typeof r.id === "string" && r.id ? r.id : crypto.randomUUID(),
         material_id: r.material_id || r.materialId,
         quantity: r.quantity,
         reason: r.reason || null,
@@ -230,7 +236,7 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
 
     const mapUsedMaterialLogs = (records: any[]): any[] =>
       records.map(r => ({
-        id: crypto.randomUUID(),
+        id: typeof r.id === "string" && r.id ? r.id : crypto.randomUUID(),
         material_id: r.material_id || r.materialId,
         quantity: r.quantity,
         size: r.size,
