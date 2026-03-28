@@ -554,3 +554,77 @@ export async function createWasteLogInSupabase(log: CreateWasteLogInput) {
 export async function deleteWasteLogInSupabase(wasteLogId: string) {
   return supabaseDelete(`/waste_logs?id=eq.${encodeURIComponent(wasteLogId)}`);
 }
+
+// Used Materials Functions
+
+import type { UsedMaterialLog } from "../types/used-material";
+
+type SupabaseUsedMaterialLogRow = {
+  id: string;
+  material_id?: string;
+  materialId?: string;
+  quantity: number;
+  size: string;
+  unit: string;
+  job_name?: string | null;
+  jobName?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  createdAt?: string;
+};
+
+const normalizeUsedMaterialLog = (row: SupabaseUsedMaterialLogRow): UsedMaterialLog => ({
+  id: row.id,
+  materialId: row.material_id ?? row.materialId ?? "",
+  quantity: Number(row.quantity) || 0,
+  size: row.size,
+  unit: row.unit,
+  ...(row.job_name ?? row.jobName ? { jobName: row.job_name ?? row.jobName ?? undefined } : {}),
+  ...(row.notes ? { notes: row.notes } : {}),
+  createdAt: row.created_at ?? row.createdAt ?? new Date(0).toISOString(),
+});
+
+export type CreateUsedMaterialLogInput = {
+  materialId: string;
+  quantity: number;
+  size: string;
+  unit: string;
+  jobName?: string;
+  notes?: string;
+};
+
+export async function fetchUsedMaterialLogsFromSupabase() {
+  const result = await supabaseGet<SupabaseUsedMaterialLogRow[]>(
+    `/used_materials_logs?order=created_at.desc`,
+  );
+
+  return {
+    data: (result.data ?? []).map(normalizeUsedMaterialLog),
+    error: result.error,
+  };
+}
+
+export async function createUsedMaterialLogInSupabase(log: CreateUsedMaterialLogInput) {
+  const payload: Record<string, string | number | null> = {
+    id: crypto.randomUUID(),
+    material_id: log.materialId,
+    quantity: log.quantity,
+    size: log.size,
+    unit: log.unit,
+    created_at: new Date().toISOString(),
+  };
+
+  if (log.jobName) {
+    payload.job_name = log.jobName;
+  }
+
+  if (log.notes) {
+    payload.notes = log.notes;
+  }
+
+  return supabasePost("/used_materials_logs", payload);
+}
+
+export async function deleteUsedMaterialLogInSupabase(logId: string) {
+  return supabaseDelete(`/used_materials_logs?id=eq.${encodeURIComponent(logId)}`);
+}

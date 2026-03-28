@@ -10,16 +10,20 @@ export function TopHeader() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  if (pathname === "/login") {
+    return null;
+  }
+
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/dashboard", label: "Dashboard" },
     { href: "/inventory", label: "Inventory" },
     { href: "/materials", label: "Materials" },
+    { href: "/used-materials", label: "Used Materials" },
     { href: "/waste", label: "Waste" },
     { href: "/categories", label: "Categories" },
     { href: "/units", label: "Units" },
     { href: "/jobs", label: "Jobs" },
-    { href: "/reports", label: "Reports" },
   ];
 
   const isRouteActive = (href: string) => {

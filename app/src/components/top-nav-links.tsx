@@ -15,6 +15,7 @@ const primaryNavItems = [
 
 const secondaryNavItems = [
   { href: "/materials", label: "Materials" },
+  { href: "/used-materials", label: "Used Materials" },
   { href: "/waste", label: "Waste" },
   { href: "/categories", label: "Categories" },
   { href: "/units", label: "Units" },
@@ -22,7 +23,6 @@ const secondaryNavItems = [
   { href: "/job-types", label: "Job Types" },
   { href: "/buildings", label: "Buildings" },
   { href: "/jobs/standards", label: "Job Standards" },
-  { href: "/reports", label: "Reports" },
 ];
 
 export function TopNavLinks({ currentPath }: TopNavLinksProps) {
@@ -43,6 +43,7 @@ export function TopNavLinks({ currentPath }: TopNavLinksProps) {
   const isRouteActive = (href: string) =>
     href === currentPath || 
     (href === "/materials" && currentPath.startsWith("/materials/")) || 
+    (href === "/used-materials" && currentPath.startsWith("/used-materials")) ||
     (href === "/categories" && currentPath.startsWith("/categories/")) ||
     (href === "/units" && currentPath.startsWith("/units/")) ||
     (href === "/jobs" && currentPath.startsWith("/jobs/") && !currentPath.startsWith("/jobs/standards")) ||
