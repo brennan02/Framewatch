@@ -116,11 +116,11 @@ export async function importDataFromJSON(data: ExportData): Promise<{ success: b
       return { success: false, message: "Supabase configuration missing" };
     }
 
-    // Helper function to remove ID fields before import
+    // Helper function to remove ID and timestamp fields before import
     const stripIds = (records: any[]): any[] => {
       if (!Array.isArray(records)) return [];
       return records.map(record => {
-        const { id, ...rest } = record;
+        const { id, created_at, updated_at, ...rest } = record;
         return rest;
       });
     };
