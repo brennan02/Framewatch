@@ -1,6 +1,7 @@
 import { UsedMaterialForm } from "../src/components/used-material-form";
 import { AllocateForm } from "../src/components/allocate-materials-form";
-import { fetchMaterialsFromSupabase, fetchUsedMaterialLogsFromSupabase, fetchUnitsFromSupabase } from "../src/lib/supabase";
+import { fetchMaterialsFromSupabase, fetchUsedMaterialLogsFromSupabase, fetchUnitsFromSupabase, fetchUnitConversionsFromSupabase } from "../src/lib/supabase";
+import { convertUnit } from "../src/lib/unit-conversions";
 
 type Material = {
   id: string;
@@ -34,6 +35,7 @@ export default async function UsedMaterialsPage(props: {
   const { data: materials, error: materialsError } = await fetchMaterialsFromSupabase();
   const { data: usedMaterialLogs, error: logsError } = await fetchUsedMaterialLogsFromSupabase();
   const { data: units, error: unitsError } = await fetchUnitsFromSupabase();
+  const { data: conversions, error: conversionsError } = await fetchUnitConversionsFromSupabase();
 
   // Create a map of material IDs to names for easy lookup
   const materialMap = new Map<string, Material>();
@@ -68,12 +70,28 @@ export default async function UsedMaterialsPage(props: {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  // Filter by search size and unit
+  // Filter by search size and unit with conversion support
   const filteredLogs = groupedLogsList.filter((log) => {
     if (!searchSize || !searchUnit) return true;
-    if (log.unit !== searchUnit) return false;
-    const logSize = parseFloat(log.size);
-    return logSize >= searchSize;
+    
+    // If units are the same, do direct comparison
+    if (log.unit === searchUnit) {
+      const logSize = parseFloat(log.size);
+      return logSize >= searchSize;
+    }
+
+    // Try to convert log size to search unit for comparison
+    if (conversions && conversions.length > 0) {
+      const logSizeNum = parseFloat(log.size);
+      const convertedSize = convertUnit(logSizeNum, log.unit, searchUnit, conversions);
+      
+      if (convertedSize !== null) {
+        return convertedSize >= searchSize;
+      }
+    }
+
+    // No conversion found, skip this log
+    return false;
   });
 
   const totalLogged = groupedLogsList.length;

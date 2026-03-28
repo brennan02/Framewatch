@@ -628,3 +628,83 @@ export async function createUsedMaterialLogInSupabase(log: CreateUsedMaterialLog
 export async function deleteUsedMaterialLogInSupabase(logId: string) {
   return supabaseDelete(`/used_materials_logs?id=eq.${encodeURIComponent(logId)}`);
 }
+
+// Unit Conversions Functions
+
+type SupabaseUnitConversionRow = {
+  id: string;
+  source_unit: string;
+  target_unit: string;
+  conversion_factor: number;
+  description?: string | null;
+  created_at?: string;
+};
+
+export type CreateUnitConversionInput = {
+  sourceUnit: string;
+  targetUnit: string;
+  conversionFactor: number;
+  description?: string;
+};
+
+export type UnitConversion = {
+  id: string;
+  sourceUnit: string;
+  targetUnit: string;
+  conversionFactor: number;
+  description?: string;
+  createdAt: string;
+};
+
+const normalizeUnitConversion = (row: SupabaseUnitConversionRow): UnitConversion => ({
+  id: row.id,
+  sourceUnit: row.source_unit,
+  targetUnit: row.target_unit,
+  conversionFactor: Number(row.conversion_factor) || 1,
+  description: row.description ?? undefined,
+  createdAt: row.created_at ?? new Date(0).toISOString(),
+});
+
+export async function fetchUnitConversionsFromSupabase() {
+  const result = await supabaseGet<SupabaseUnitConversionRow[]>(
+    `/unit_conversions?order=source_unit.asc&order=target_unit.asc`,
+  );
+
+  return {
+    data: (result.data ?? []).map(normalizeUnitConversion),
+    error: result.error,
+  };
+}
+
+export async function createUnitConversionInSupabase(conversion: CreateUnitConversionInput) {
+  const payload: Record<string, string | number | null> = {
+    id: crypto.randomUUID(),
+    source_unit: conversion.sourceUnit,
+    target_unit: conversion.targetUnit,
+    conversion_factor: conversion.conversionFactor,
+  };
+
+  if (conversion.description) {
+    payload.description = conversion.description;
+  }
+
+  return supabasePost("/unit_conversions", payload);
+}
+
+export async function updateUnitConversionInSupabase(
+  conversionId: string,
+  updates: Partial<CreateUnitConversionInput>
+) {
+  const payload: Record<string, string | number | null> = {};
+
+  if (updates.sourceUnit !== undefined) payload.source_unit = updates.sourceUnit;
+  if (updates.targetUnit !== undefined) payload.target_unit = updates.targetUnit;
+  if (updates.conversionFactor !== undefined) payload.conversion_factor = updates.conversionFactor;
+  if (updates.description !== undefined) payload.description = updates.description ?? null;
+
+  return supabasePatch(`/unit_conversions?id=eq.${encodeURIComponent(conversionId)}`, payload);
+}
+
+export async function deleteUnitConversionInSupabase(conversionId: string) {
+  return supabaseDelete(`/unit_conversions?id=eq.${encodeURIComponent(conversionId)}`);
+}
