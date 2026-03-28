@@ -189,7 +189,17 @@ export function DataExportImport() {
     try {
       const result = await resetAllData();
       if (result.success) {
+        window.localStorage.removeItem(JOB_STANDARDS_STORAGE_KEY);
+
         setMessage("✓ " + result.message);
+        setBackupSummary((current) =>
+          current
+            ? {
+                ...current,
+                job_standards: 0,
+              }
+            : current,
+        );
         setShowResetConfirm(false);
         setTimeout(() => setMessage(""), 3000);
       } else {

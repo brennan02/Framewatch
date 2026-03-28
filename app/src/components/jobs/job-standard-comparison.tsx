@@ -88,6 +88,14 @@ function loadStandardsFromStorage(): StandardEntry[] {
   }
 }
 
+function saveStandardsToStorage(entries: StandardEntry[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
 export function JobStandardComparison({ materials, completedJobs }: JobStandardComparisonProps) {
   const [standards, setStandards] = useState<StandardEntry[]>([]);
   const [search, setSearch] = useState("");
@@ -97,6 +105,20 @@ export function JobStandardComparison({ materials, completedJobs }: JobStandardC
   useEffect(() => {
     setStandards(loadStandardsFromStorage());
   }, []);
+
+  useEffect(() => {
+    const validMaterialIds = new Set(materials.map((material) => material.id));
+
+    setStandards((current) => {
+      const cleaned = current.filter((entry) => validMaterialIds.has(entry.materialId));
+
+      if (cleaned.length !== current.length) {
+        saveStandardsToStorage(cleaned);
+      }
+
+      return cleaned;
+    });
+  }, [materials]);
 
   const materialById = useMemo(
     () =>

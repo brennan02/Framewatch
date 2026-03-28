@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type MaterialOption = {
   id: string;
@@ -94,6 +94,20 @@ export function JobStandardsClient({ materials, jobTypes }: JobStandardsClientPr
   const [rows, setRows] = useState<StandardRow[]>([emptyRow()]);
   const [entries, setEntries] = useState<StandardEntry[]>(() => loadStandards());
   const [status, setStatus] = useState<"idle" | "saved" | "validation" | "deleted">("idle");
+
+  useEffect(() => {
+    const validMaterialIds = new Set(materials.map((material) => material.id));
+
+    setEntries((current) => {
+      const cleaned = current.filter((entry) => validMaterialIds.has(entry.materialId));
+
+      if (cleaned.length !== current.length) {
+        saveStandards(cleaned);
+      }
+
+      return cleaned;
+    });
+  }, [materials]);
 
   const materialById = useMemo(
     () =>
