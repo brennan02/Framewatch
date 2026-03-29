@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import QrScanner from "../scan/qr-scanner";
 
@@ -39,7 +40,8 @@ type StandardEntry = {
 };
 
 export function JobUsageForm({ materials, action, standards, buildings = [] }: JobUsageFormProps) {
-  const [jobName, setJobName] = useState("");
+  const CREATE_NEW_BUILDING_OPTION = "__create_new_building__";
+
   const [selectedBuildingId, setSelectedBuildingId] = useState("");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [rows, setRows] = useState<UsageRow[]>([
@@ -85,13 +87,9 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
   }, [standardSearch, standardsByType]);
 
   useEffect(() => {
-    if (filteredStandardTypes.length === 0) {
+    // Keep default blank; only clear selection when it is no longer valid.
+    if (selectedStandardType && !filteredStandardTypes.includes(selectedStandardType)) {
       setSelectedStandardType("");
-      return;
-    }
-
-    if (!selectedStandardType || !filteredStandardTypes.includes(selectedStandardType)) {
-      setSelectedStandardType(filteredStandardTypes[0]);
     }
   }, [filteredStandardTypes, selectedStandardType]);
 
@@ -109,6 +107,13 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
       }))
       .sort((a, b) => a.materialName.localeCompare(b.materialName));
   }, [materialById, selectedStandardType, standardsByType]);
+
+  const selectedBuilding = useMemo(
+    () => buildings.find((item) => item.id === selectedBuildingId),
+    [buildings, selectedBuildingId],
+  );
+
+  const resolvedJobName = selectedBuilding?.name ?? "";
 
   const applySelectedStandard = () => {
     if (selectedStandardRows.length === 0) {
@@ -128,12 +133,6 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
 
   const applyBuildingSelection = (buildingId: string) => {
     setSelectedBuildingId(buildingId);
-    const building = buildings.find((item) => item.id === buildingId);
-    if (!building) {
-      return;
-    }
-
-    setJobName(building.name);
   };
 
   const handleBuildingQrScan = (decodedValue: string) => {
@@ -155,7 +154,7 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
 
       const scannedName = parts.slice(2).join(":").trim();
       if (scannedName) {
-        setJobName(scannedName);
+        applyBuildingSelection(CREATE_NEW_BUILDING_OPTION);
       }
 
       return;
@@ -171,7 +170,7 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
     }
 
     // Fallback for unknown payloads: still let user continue with scanned value.
-    setJobName(parsed);
+    applyBuildingSelection(CREATE_NEW_BUILDING_OPTION);
   };
 
   const updateRow = (rowId: number, updates: Partial<UsageRow>) => {
@@ -200,33 +199,24 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
 
   return (
     <form action={action} className="mt-5 grid gap-4">
-      <label className="grid gap-2 text-sm">
-        <span className="text-slate-300">Job Name</span>
-        <input
-          type="text"
-          name="job_name"
-          value={jobName}
-          onChange={(event) => setJobName(event.target.value)}
-          required
-          placeholder="e.g. Elm Street Duplex"
-          className="rounded-xl border border-cyan-400/30 bg-[#050914] px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyan-300 focus:outline-none"
-        />
-      </label>
+      <input type="hidden" name="job_name" value={resolvedJobName} />
 
       <div className="grid gap-3 rounded-xl border border-cyan-500/20 bg-[#050914] p-4 md:grid-cols-[minmax(0,1fr)_auto]">
         <label className="grid gap-2 text-sm">
-          <span className="text-slate-300">Building ID (optional)</span>
+          <span className="text-slate-300">Building ID</span>
           <select
             value={selectedBuildingId}
             onChange={(event) => applyBuildingSelection(event.target.value)}
+            required
             className="rounded-xl border border-cyan-400/30 bg-[#050914] px-3 py-2 text-white focus:border-cyan-300 focus:outline-none"
           >
-            <option value="">Select a building</option>
+            <option value="">Select a building ID</option>
             {buildings.map((building) => (
               <option key={building.id} value={building.id}>
                 {building.specialId} - {building.name}
               </option>
             ))}
+            <option value={CREATE_NEW_BUILDING_OPTION}>Create new building...</option>
           </select>
         </label>
 
@@ -241,9 +231,18 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
         </div>
 
         <p className="md:col-span-2 text-xs text-slate-400">
-          Scanning or selecting a building fills the job name, but you still enter actual material
-          usage below for this building.
+          Select an existing building ID or choose create new building. Material usage will be
+          recorded against that building.
         </p>
+
+        {selectedBuildingId === CREATE_NEW_BUILDING_OPTION ? (
+          <div className="md:col-span-2 rounded-lg border border-cyan-400/30 bg-[#111a2f]/80 px-3 py-2 text-sm text-slate-200">
+            Create the building first on the Buildings page, then return here and select its ID.
+            <Link href="/buildings" className="ml-2 font-semibold text-cyan-300 hover:text-cyan-200">
+              Go to Buildings
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-cyan-500/20 bg-[#050914] p-4">
@@ -272,7 +271,9 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
               onChange={(event) => setSelectedStandardType(event.target.value)}
               className="rounded-xl border border-cyan-400/30 bg-[#050914] px-3 py-2 text-white focus:border-cyan-300 focus:outline-none"
             >
-              {filteredStandardTypes.length === 0 ? <option value="">No standards found</option> : null}
+              <option value="">
+                {filteredStandardTypes.length === 0 ? "No standards found" : "Select a standard job type"}
+              </option>
               {filteredStandardTypes.map((typeName) => (
                 <option key={typeName} value={typeName}>
                   {typeName}
@@ -385,6 +386,7 @@ export function JobUsageForm({ materials, action, standards, buildings = [] }: J
 
         <button
           type="submit"
+          disabled={!resolvedJobName}
           className="rounded-xl border border-cyan-400/60 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200 hover:bg-cyan-500/20"
         >
           Save Job Usage Entries

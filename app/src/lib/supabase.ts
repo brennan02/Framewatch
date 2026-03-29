@@ -555,6 +555,10 @@ export async function deleteWasteLogInSupabase(wasteLogId: string) {
   return supabaseDelete(`/waste_logs?id=eq.${encodeURIComponent(wasteLogId)}`);
 }
 
+export async function deleteWasteLogsByJobNameInSupabase(jobName: string) {
+  return supabaseDelete(`/waste_logs?job_name=eq.${encodeURIComponent(jobName)}`);
+}
+
 // Used Materials Functions
 
 import type { UsedMaterialLog } from "../types/used-material";
@@ -627,6 +631,10 @@ export async function createUsedMaterialLogInSupabase(log: CreateUsedMaterialLog
 
 export async function deleteUsedMaterialLogInSupabase(logId: string) {
   return supabaseDelete(`/used_materials_logs?id=eq.${encodeURIComponent(logId)}`);
+}
+
+export async function deleteUsedMaterialLogsByJobNameInSupabase(jobName: string) {
+  return supabaseDelete(`/used_materials_logs?job_name=eq.${encodeURIComponent(jobName)}`);
 }
 
 export async function deleteAllDataFromTable(tableName: string) {

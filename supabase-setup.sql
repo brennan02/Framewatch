@@ -28,3 +28,34 @@ CREATE TABLE IF NOT EXISTS unit_conversions (
   created_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(source_unit, target_unit)
 );
+
+-- ============================================
+-- Keep Buildings and Job-linked Logs Synced
+-- ============================================
+-- When a building is deleted, remove related job-linked logs so Jobs pages stay in sync.
+-- This complements app-side cleanup and protects integrity for direct DB deletes.
+
+CREATE OR REPLACE FUNCTION cleanup_logs_on_building_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+  DELETE FROM inventory_logs
+  WHERE LOWER(TRIM(COALESCE(job_name, ''))) = LOWER(TRIM(OLD.name))
+    AND action = 'out'
+    AND quantity < 0;
+
+  DELETE FROM waste_logs
+  WHERE LOWER(TRIM(COALESCE(job_name, ''))) = LOWER(TRIM(OLD.name));
+
+  DELETE FROM used_materials_logs
+  WHERE LOWER(TRIM(COALESCE(job_name, ''))) = LOWER(TRIM(OLD.name));
+
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_cleanup_logs_on_building_delete ON buildings;
+
+CREATE TRIGGER trg_cleanup_logs_on_building_delete
+AFTER DELETE ON buildings
+FOR EACH ROW
+EXECUTE FUNCTION cleanup_logs_on_building_delete();

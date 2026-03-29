@@ -4,8 +4,13 @@ import { redirect } from "next/navigation";
 import {
   createBuildingInSupabase,
   deleteBuildingInSupabase,
+  deleteInventoryLogInSupabase,
+  deleteUsedMaterialLogsByJobNameInSupabase,
+  deleteWasteLogsByJobNameInSupabase,
+  fetchInventoryLogsFromSupabase,
   fetchBuildingsFromSupabase,
   fetchJobTypesFromSupabase,
+  createInventoryLogInSupabase,
 } from "../src/lib/supabase";
 import { PrintBuildingQrButton } from "../src/components/buildings/print-building-qr-button";
 
@@ -52,6 +57,60 @@ async function deleteBuildingAction(formData: FormData) {
   const buildingId = String(formData.get("building_id") ?? "").trim();
   if (!buildingId) {
     redirect("/buildings?status=error&message=Missing building ID");
+  }
+
+  const { data: buildings, error: fetchBuildingsError } = await fetchBuildingsFromSupabase();
+  if (fetchBuildingsError) {
+    redirect(`/buildings?status=error&message=${encodeURIComponent(fetchBuildingsError)}`);
+  }
+
+  const building = buildings.find((item) => item.id === buildingId);
+  if (!building) {
+    redirect("/buildings?status=error&message=Building not found");
+  }
+
+  const jobName = building.name;
+
+  const { data: logs, error: fetchLogsError } = await fetchInventoryLogsFromSupabase();
+  if (fetchLogsError) {
+    redirect(`/buildings?status=error&message=${encodeURIComponent(fetchLogsError)}`);
+  }
+
+  const projectUsageLogs = logs.filter((log) => {
+    const matchesJob = log.jobName?.trim().toLowerCase() === jobName.trim().toLowerCase();
+    const isUsageMovement = log.action === "out" && log.quantity < 0;
+    return Boolean(matchesJob && isUsageMovement);
+  });
+
+  // Restore on-hand counts before removing usage logs tied to this building/job.
+  for (const log of projectUsageLogs) {
+    const restoreResult = await createInventoryLogInSupabase({
+      materialId: log.materialId,
+      action: "in",
+      quantity: Math.abs(log.quantity),
+      note: `Restored due to deleting building (${jobName})`,
+    });
+
+    if (restoreResult.error) {
+      redirect(`/buildings?status=error&message=${encodeURIComponent(restoreResult.error)}`);
+    }
+  }
+
+  for (const log of projectUsageLogs) {
+    const deleteUsageResult = await deleteInventoryLogInSupabase(log.id);
+    if (deleteUsageResult.error) {
+      redirect(`/buildings?status=error&message=${encodeURIComponent(deleteUsageResult.error)}`);
+    }
+  }
+
+  const deleteWasteResult = await deleteWasteLogsByJobNameInSupabase(jobName);
+  if (deleteWasteResult.error) {
+    redirect(`/buildings?status=error&message=${encodeURIComponent(deleteWasteResult.error)}`);
+  }
+
+  const deleteUsedMaterialResult = await deleteUsedMaterialLogsByJobNameInSupabase(jobName);
+  if (deleteUsedMaterialResult.error) {
+    redirect(`/buildings?status=error&message=${encodeURIComponent(deleteUsedMaterialResult.error)}`);
   }
 
   const { error } = await deleteBuildingInSupabase(buildingId);
